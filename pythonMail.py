@@ -3,7 +3,7 @@ import smtplib
 FROMADDR = "aldomendez86@gmail.com"
 LOGIN    = "aldomendez86@gmail.com"
 PASSWORD = "dsorokzerkmodtne"
-TOADDRS  = ["amendez@cyoptics.com", "tlugo@cyoptics.com"]
+TOADDRS  = ["amendez@cyoptics.com"]
 SUBJECT  = "Python Mail Service Test"
  
 msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
