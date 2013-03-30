@@ -1,7 +1,11 @@
-import urllib.request, urllib.parse, urllib.error
-
+import urllib.request, urllib.parse, urllib.error, re
+f = open('starts_outs.txt', 'w')
 params = urllib.parse.urlencode({"txtFInicio":"2013-03-28","txtFFinal":"2013-03-29","optOpcion":"ambos","optgrouping":"dia"})
 params = params.encode('utf-8')
 # print(params)
 page = urllib.request.urlopen('http://mexico/reports/starts_outs.php',params).read()
-print(page)
+# print(page)
+decodedPage = page.decode('utf-8')
+f.write(decodedPage)
+f.close()
+print(decodedPage)
