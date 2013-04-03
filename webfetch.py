@@ -1,5 +1,5 @@
 import urllib.request, urllib.parse, urllib.error, re
-from datetime import date
+from datetime import date,timedelta
 def readFile(file):
 	f = open(file, 'r')
 	text = f.read()
@@ -23,23 +23,31 @@ def encodeParams():
 	params = params.encode('utf-8')
 	return params
 
-def showResults(pattern):
+def showResults(pattern,searchItem):
 	m = pattern.search(page)
 	if m:
 			for result in pattern.finditer(page):
 				fecha, tag, mov, value = result.groups()
-				print('Match found: ',fecha,tag,mov,value)
+				print(">> {:14s} {:10s} {:4s} {:4s}".format(tag,fecha,mov,value))
 	else:
-		print('No match')
+		print('No match',searchItem)
 
 def fetchResults(code):
 	regex = 'MZ.*(\d{4}-\d{2}-\d{2}).*(' + code + ').+(DONE).*>(\d+)'
 	# print(regex)
 	pattern = re.compile(regex, re.MULTILINE)
-	showResults(pattern)	
+	showResults(pattern,code)	
 
-print(date.today())
+hoy = ""
+def manageDates():
+	global hoy
+	hoy = date.today()
+	ayer = hoy + timedelta(days = -1)
+	manana = hoy + timedelta(days=1)
+	#print(ayer,hoy,manana)
 
+manageDates()
+print(hoy)
 ###################################
 # Si trabajo desde CyOptics sera True
 # Si quiero probar REGEX sera False
@@ -54,6 +62,3 @@ else:
 
 fetchResults('LR4 SHIM ROSA')
 fetchResults('LR4G1WALPS')
-fetchResults('LR4G1WALPS')
-
-
