@@ -1,5 +1,4 @@
-import urllib.request, urllib.parse, urllib.error, re, smtplib
-from datetime import date,timedelta
+import urllib.request, urllib.parse, urllib.error, re, smtplib, datetime
 
 def readFile(file):
 	f = open(file, 'r')
@@ -16,15 +15,19 @@ def writeToFile(file,content):
 		raise
 	
 def readWeb(page,encodedParams):
-	page = urllib.request.urlopen(page,encodedParams).read()
+	page = urllib.request.urlopen(page,encodedParams).read()asd fwgej}
 	return page.decode('utf-8')
 
 def encodeParams():
-	global hoy
-	hoy = date.today()
-	ayer = hoy + timedelta(days = -1)
-	manana = hoy + timedelta(days=1)
-	params = urllib.parse.urlencode({"txtFInicio":str(hoy),"txtFFinal":str(manana),"optOpcion":"ambos","optgrouping":"dia"})
+	global hoy,ayer,manana
+	d = datetime.datetime.now()
+	if d.hour > 7:
+		inicio = ayer
+		final = hoy
+	else:
+		inicio = hoy
+		final = manana
+	params = urllib.parse.urlencode({"txtFInicio":str(inicio),"txtFFinal":str(final),"optOpcion":"ambos","optgrouping":"dia"})
 	params = params.encode('utf-8')
 	return params
 
@@ -54,19 +57,19 @@ def appendDonesToMail(code):
 	global dones
 	dones = dones + getDONES(code) + '\n'
 
-def manageDates():
-	global hoy
-	hoy = date.today()
-	ayer = hoy + timedelta(days = -1)
-	manana = hoy + timedelta(days=1)
-	#print(ayer,hoy,manana)
+def initDates():
+	global hoy,ayer,manana
+	hoy = datetime.date.today()
+	ayer = hoy + datetime.timedelta(days = -1)
+	manana = hoy + datetime.timedelta(days=1)
 
 ###################################
 # Si trabajo desde CyOptics sera True
 # Si quiero probar REGEX sera False
 # Si quiero hacer casi cualquier otra prueba sera False
-workingFromWeb = True
-dones = str(date.today()) + "\n"
+workingFromWeb = False
+initDates()
+dones = ""
 if workingFromWeb:
 	params = encodeParams()
 	page = readWeb('http://mexico/reports/starts_outs.php',params)
@@ -76,24 +79,28 @@ else:
 #map(print, ['LR4 SHIM ROSA','LR4G1WALPS'])
 
 [appendDonesToMail(x) for x in ['LR4 SHIM ROSA','LR4G1WALPS']]
-print(dones)
+
 ####################################################
 # Configuracion del servicio
+def sendMail():
+	FROMADDR = "aldomendez86@gmail.com"
+	LOGIN    = "aldomendez86@gmail.com"
+	PASSWORD = "dsorokzerkmodtne"
+	TOADDRS  = ["aldomendez86@gmail.com",""]
+	SUBJECT  = "RE:OUTS LR4"
+	 
+	msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
+	       % (FROMADDR, ", ".join(TOADDRS), SUBJECT) )
+	msg += "Dones de " + str(hoy) + "\n\n" + dones
 
-FROMADDR = "aldomendez86@gmail.com"
-LOGIN    = "aldomendez86@gmail.com"
-PASSWORD = "dsorokzerkmodtne"
-TOADDRS  = ["amendez@cyoptics.com","tlugo@cyoptics.com"]
-SUBJECT  = "OUTS LR4"
- 
-msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
-       % (FROMADDR, ", ".join(TOADDRS), SUBJECT) )
-msg += "Dones de " + str(hoy) + "\n\n" + dones
+	writeToFile("errorLog.txt",msg)
 
-server = smtplib.SMTP('smtp.gmail.com', 587)
-server.set_debuglevel(1)
-server.ehlo()
-server.starttls()
-server.login(LOGIN, PASSWORD)
-server.sendmail(FROMADDR, TOADDRS, msg)
-server.quit()
+	server = smtplib.SMTP('smtp.gmail.com', 587)
+	server.set_debuglevel(1)
+	server.ehlo()
+	server.starttls()
+	server.login(LOGIN, PASSWORD)
+	server.sendmail(FROMADDR, TOADDRS, msg)
+	server.quit()
+
+sendMail()
