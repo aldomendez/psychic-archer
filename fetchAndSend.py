@@ -1,5 +1,4 @@
-import urllib.request, urllib.parse, urllib.error, re, smtplib
-from datetime import date,timedelta
+import urllib.request, urllib.parse, urllib.error, re, smtplib, datetime
 
 def readFile(file):
 	f = open(file, 'r')
@@ -20,11 +19,15 @@ def readWeb(page,encodedParams):
 	return page.decode('utf-8')
 
 def encodeParams():
-	global hoy
-	hoy = date.today()
-	ayer = hoy + timedelta(days = -1)
-	manana = hoy + timedelta(days=1)
-	params = urllib.parse.urlencode({"txtFInicio":str(hoy),"txtFFinal":str(manana),"optOpcion":"ambos","optgrouping":"dia"})
+	global hoy,ayer,manana
+	d = datetime.datetime.now()
+	if d.hour < 7:
+		inicio = ayer
+		final = hoy
+	else:
+		inicio = hoy
+		final = manana
+	params = urllib.parse.urlencode({"txtFInicio":str(inicio),"txtFFinal":str(final),"optOpcion":"ambos","optgrouping":"dia"})
 	params = params.encode('utf-8')
 	return params
 
@@ -46,7 +49,7 @@ def getDONES(code):
 			fecha, tag, mov, value = r
 			# print(tag)
 		fecha, tag, mov, value = result[0]
-		return ">> {:14s} {:10s} {:4s} {:4s}".format(tag,fecha,mov,value)
+		return ">> {:14s} {:4s}".format(tag,value)
 	else:
 		return 'No match for ' + code
 
@@ -54,26 +57,29 @@ def appendDonesToMail(code):
 	global dones
 	dones = dones + getDONES(code) + '\n'
 
-def manageDates():
-	global hoy
-	hoy = date.today()
-	ayer = hoy + timedelta(days = -1)
-	manana = hoy + timedelta(days=1)
-	#print(ayer,hoy,manana)
+def initDates():
+	global hoy,ayer,manana
+	hoy = datetime.date.today()
+	ayer = hoy + datetime.timedelta(days = -1)
+	manana = hoy + datetime.timedelta(days = 1)
 
 ###################################
 # Si trabajo desde CyOptics sera True
 # Si quiero probar REGEX sera False
 # Si quiero hacer casi cualquier otra prueba sera False
 workingFromWeb = True
-dones = str(date.today()) + "\n"
+initDates()
+dones = ""
 if workingFromWeb:
 	params = encodeParams()
 	page = readWeb('http://mexico/reports/starts_outs.php',params)
 else:
+	params = encodeParams()
 	page = readFile('starts_outs.txt')
 
 #map(print, ['LR4 SHIM ROSA','LR4G1WALPS'])
+
+print((datetime.datetime.now()))
 
 [appendDonesToMail(x) for x in ['LR4 SHIM ROSA','LR4G1WALPS']]
 print(dones)
@@ -83,8 +89,8 @@ print(dones)
 FROMADDR = "aldomendez86@gmail.com"
 LOGIN    = "aldomendez86@gmail.com"
 PASSWORD = "dsorokzerkmodtne"
-TOADDRS  = ["amendez@cyoptics.com","tlugo@cyoptics.com"]
-SUBJECT  = "OUTS LR4"
+TOADDRS  = ["amendez@cyoptics.com","tlugo@cyoptics.com","jherrera@cyoptics.com","rloredo@cyoptics.com"]
+SUBJECT  = "RE: OUTS LR4"
  
 msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n"
        % (FROMADDR, ", ".join(TOADDRS), SUBJECT) )
